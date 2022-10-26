@@ -46,7 +46,7 @@ func (s *Slacker) createReleasePost(ctx context.Context, ops *operations.Operati
 
 	fields = append(fields, slack.AttachmentField{
 		Title: "Status",
-		Value: string(ops.Action),
+		Value: string(ops.Action.GetPastParticiple()),
 		Short: true,
 	})
 
@@ -121,7 +121,7 @@ func (s *Slacker) createReleasePost(ctx context.Context, ops *operations.Operati
 
 	msg := slack.MsgOptionAttachments(
 		slack.Attachment{
-			Title:      fmt.Sprintf("Release has been started for %s", ops.DeliveryPipelineId),
+			Title:      fmt.Sprintf("[Release] %s %s", ops.DeliveryPipelineId, ops.ReleaseId),
 			TitleLink:  ops.GetDeliveryPipelineURL(),
 			Text:       txt,
 			Fields:     fields,
@@ -167,7 +167,7 @@ func (s *Slacker) NotifyRolloutUpdate(ctx context.Context, ops *operations.Opera
 	fields := make([]slack.AttachmentField, 0)
 	fields = append(fields, slack.AttachmentField{
 		Title: "Status",
-		Value: string(ops.Action),
+		Value: string(ops.Action.GetPastParticiple()),
 		Short: true,
 	})
 
@@ -180,9 +180,9 @@ func (s *Slacker) NotifyRolloutUpdate(ctx context.Context, ops *operations.Opera
 	msg := slack.MsgOptionAttachments(
 		slack.Attachment{
 			Color:      color,
-			Title:      fmt.Sprintf("Rollout %s for %s ", ops.Action, ops.TargetId),
+			Title:      fmt.Sprintf("[%s] rollout for %s ", ops.Action, ops.TargetId),
 			TitleLink:  ops.GetDeliveryPipelineURL(),
-			Text:       fmt.Sprintf("Rollout has been %s. Go to the Cloud Console for %s.", ops.Action, possibleAction),
+			Text:       fmt.Sprintf("Rollout has been %s. Go to the Cloud Console for %s.", ops.Action.GetPastParticiple(), possibleAction),
 			AuthorName: "Cloud Deploy",
 			Fields:     fields,
 		},
@@ -219,11 +219,14 @@ func (s *Slacker) NotifyApprovalThread(ctx context.Context, approval *approvals.
 	}
 
 	api := slack.New(s.token)
-	_, _, err = api.PostMessage(
+	_, _, err = api.PostMessageContext(
+		ctx,
 		s.channel,
 		slack.MsgOptionAttachments(slack.Attachment{
-			Color: getApprovalColor(string(approval.Action)),
-			Text:  fmt.Sprintf("Approval is now %s for %s", approval.Action, approval.TargetId),
+			Color:      getApprovalColor(string(approval.Action)),
+			Title:      fmt.Sprintf("[Approval] %s", approval.Action),
+			Text:       fmt.Sprintf("Approval is now %s for %s", approval.Action.GetPastParticiple(), approval.TargetId),
+			AuthorName: "Cloud Deploy",
 		}),
 		slack.MsgOptionAsUser(true),
 		slack.MsgOptionTS(*ts),

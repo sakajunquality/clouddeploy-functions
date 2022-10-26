@@ -84,3 +84,16 @@ func (o *Operation) getConsoleBaseURL() string {
 func (o *Operation) DispachAutoPromote() bool {
 	return o.TargetId != "" && o.Action == OperationsActionSucceed && o.ResourceType == ResourceTypeRollout
 }
+
+func (o *OperationsAction) GetPastParticiple() string {
+	switch *o {
+	case OperationsActionStart:
+		return "started"
+	case OperationsActionSucceed:
+		return "succeeded"
+	case OperationsActionFailure:
+		return "failed"
+	}
+
+	return ""
+}
