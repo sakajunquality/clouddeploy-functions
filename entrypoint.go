@@ -2,6 +2,7 @@ package clouddeployfunctions
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
@@ -42,9 +43,28 @@ func AutoPromote(ctx context.Context, m PubSubMessage) error {
 // NotifyApprovalRequestSlackSimple is an entrypoint of Cloud Functions subscribing `clouddeploy-approvals`
 func NotifyApprovalRequestSlackSimple(ctx context.Context, m PubSubMessage) error {
 	approval := approvals.GetApprovalByAttributes(m.Attributes)
-	client := slacker.Slacker{
-		Token:   os.Getenv("SLACK_TOKEN"),
-		Channel: os.Getenv("SLACK_APPROVAL_CHANNEL"),
-	}
+	client := slacker.NewSlacker(os.Getenv("SLACK_TOKEN"), os.Getenv("SLACK_APPROVAL_CHANNEL"))
 	return client.NotifyApproval(ctx, approval)
+}
+
+func NotifySlackWithThread(ctx context.Context, m PubSubMessage) error {
+	client := slacker.NewSlacker(os.Getenv("SLACK_TOKEN"), os.Getenv("SLACK_CHANNEL"))
+	client.SetStateBucket(os.Getenv("SLACK_BOT_STATE_BUCKET"))
+
+	ops := operations.GetOperationByAttributes(m.Attributes)
+	switch ops.ResourceType {
+	case operations.ResourceTypeRelease:
+		if err := client.NotifyReleaseUpdate(ctx, ops); err != nil {
+			// fix logger
+			fmt.Println(err)
+		}
+	case operations.ResourceTypeRollout:
+		if err := client.NotifyRolloutUpdate(ctx, ops); err != nil {
+			// fix logger
+			fmt.Println(err)
+		}
+	default:
+		// not supported
+	}
+	return nil
 }

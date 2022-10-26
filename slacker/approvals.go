@@ -9,15 +9,10 @@ import (
 	"github.com/slack-go/slack"
 )
 
-type Slacker struct {
-	Token   string
-	Channel string
-}
-
 func (s *Slacker) NotifyApproval(ctx context.Context, approval *approvals.Approval) error {
-	api := slack.New(s.Token)
+	api := slack.New(s.token)
 	_, _, err := api.PostMessage(
-		s.Channel,
+		s.channel,
 		slack.MsgOptionAttachments(slack.Attachment{
 			Color: getApprovalColor(string(approval.Action)),
 			Text:  fmt.Sprintf("Rollout is now %s for %s", approval.Action, approval.Rollout),
