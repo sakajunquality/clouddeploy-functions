@@ -3,7 +3,9 @@ package slacker
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	"github.com/sakajunquality/clouddeploy-functions/clouddeploy"
 	"github.com/sakajunquality/clouddeploy-functions/operations"
 	"github.com/sakajunquality/clouddeploy-functions/slacker/state"
 	"github.com/slack-go/slack"
@@ -22,6 +24,18 @@ func (s *Slacker) NotifyReleaseUpdate(ctx context.Context, ops *operations.Opera
 }
 
 func (s *Slacker) createReleasePost(ctx context.Context, ops *operations.Operation) error {
+	release, err := clouddeploy.GetRelease(ctx, &clouddeploy.Rollout{
+		ProjectNumber: ops.ProjectNumber,
+		PipelineID:    ops.DeliveryPipelineId,
+		Location:      ops.Location,
+		TargetID:      ops.TargetId,
+		RolloutID:     ops.RolloutId,
+		ReleaseID:     ops.ReleaseId,
+	})
+	if err != nil {
+		return err
+	}
+
 	fields := make([]slack.AttachmentField, 0)
 	fields = append(fields, slack.AttachmentField{
 		Title: "Pipeline",
@@ -41,28 +55,74 @@ func (s *Slacker) createReleasePost(ctx context.Context, ops *operations.Operati
 		Short: true,
 	})
 
-	fields = append(fields, slack.AttachmentField{
-		Title: "Location",
-		Value: ops.Location,
-		Short: true,
-	})
+	if release.Description != "" {
+		fields = append(fields, slack.AttachmentField{
+			Title: "Description",
+			Value: release.Description,
+			Short: false,
+		})
+	}
 
-	fields = append(fields, slack.AttachmentField{
-		Title: "Project",
-		Value: ops.ProjectNumber,
-		Short: true,
-	})
 	fields = append(fields, slack.AttachmentField{
 		Title: "Link",
 		Value: fmt.Sprintf("<%s|Release> / <%s|Pipeline>", ops.GetReleaseURL(), ops.GetDeliveryPipelineURL()),
 		Short: false,
 	})
 
+	var labels []string
+	for k, v := range release.Labels {
+		labels = append(labels, fmt.Sprintf("%s: %s", k, v))
+	}
+	if len(labels) > 0 {
+		fields = append(fields, slack.AttachmentField{
+			Title: "Lables",
+			Value: strings.Join(labels, "\n"),
+			Short: false,
+		})
+	}
+
+	var deployerID string
+	var ccIDs string
+	var annotations []string
+	for k, v := range release.Annotations {
+		if k == "deployer-slack-id" {
+			deployerID = v
+			continue
+		}
+		if k == "cc-slack-group-ids" {
+			ccIDs = v
+			continue
+		}
+
+		annotations = append(annotations, fmt.Sprintf("%s: %s", k, v))
+	}
+	if len(annotations) > 0 {
+		fields = append(fields, slack.AttachmentField{
+			Title: "Annotations",
+			Value: strings.Join(annotations, "\n"),
+			Short: false,
+		})
+	}
+
+	var txt string
+	if deployerID != "" {
+		txt = fmt.Sprintf("Hey <@%s>!\nYou have initiated the release of %s.\n", deployerID, ops.DeliveryPipelineId)
+	}
+	txt += "Check this thread for rollouts' status.\n"
+
+	if ccIDs != "" {
+		ids := strings.Split(ccIDs, ",")
+		txt += "cc"
+		for _, id := range ids {
+			txt += fmt.Sprintf(" <!subteam^%s>", id)
+		}
+	}
+
 	msg := slack.MsgOptionAttachments(
 		slack.Attachment{
 			Title:      fmt.Sprintf("Release has been started for %s", ops.DeliveryPipelineId),
 			TitleLink:  ops.GetDeliveryPipelineURL(),
-			Text:       "Release has been started. Watch this thread for future notifications.",
+			Text:       txt,
 			Fields:     fields,
 			AuthorName: "Cloud Deploy",
 		},

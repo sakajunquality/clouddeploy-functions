@@ -22,13 +22,13 @@ func (r *Rollout) GetPipelineResourceID() string {
 	return fmt.Sprintf("projects/%s/locations/%s/deliveryPipelines/%s", r.ProjectNumber, r.Location, r.PipelineID)
 }
 
-func (r *Rollout) GetParent() string {
+func (r *Rollout) GetReleaseID() string {
 	return fmt.Sprintf("projects/%s/locations/%s/deliveryPipelines/%s/releases/%s", r.ProjectNumber, r.Location, r.PipelineID, r.ReleaseID)
 }
 
 func CreateRollout(ctx context.Context, client *deploy.CloudDeployClient, r *Rollout) error {
 	promoteReq := &deploypb.CreateRolloutRequest{
-		Parent:    r.GetParent(),
+		Parent:    r.GetReleaseID(),
 		RolloutId: r.RolloutID,
 		Rollout: &deploypb.Rollout{
 			TargetId: r.TargetID,
