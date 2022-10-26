@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sakajunquality/clouddeploy-functions/approvals"
+	"github.com/sakajunquality/clouddeploy-functions/pubsub/approvals"
 
 	"github.com/slack-go/slack"
 )

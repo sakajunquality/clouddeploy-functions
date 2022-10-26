@@ -2,6 +2,7 @@ package approvals
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -70,4 +71,10 @@ func (a *ApprovalAction) GetPastParticiple() string {
 	}
 
 	return ""
+}
+
+func (a *Approval) GetReleaseURL() string {
+	pipelineName, _ := a.GetPipelineName()
+	base := fmt.Sprintf("https://console.cloud.google.com/deploy/delivery-pipelines/%s/%s/", a.Location, *pipelineName)
+	return fmt.Sprintf("%sreleases/%s/rollouts?project=%s", base, a.ReleaseId, a.ProjectNumber)
 }

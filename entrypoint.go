@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/sakajunquality/clouddeploy-functions/approvals"
 	"github.com/sakajunquality/clouddeploy-functions/clouddeploy"
-	"github.com/sakajunquality/clouddeploy-functions/operations"
+	"github.com/sakajunquality/clouddeploy-functions/pubsub/approvals"
+	"github.com/sakajunquality/clouddeploy-functions/pubsub/operations"
 	"github.com/sakajunquality/clouddeploy-functions/slacker"
 
 	_ "github.com/GoogleCloudPlatform/berglas/pkg/auto"
