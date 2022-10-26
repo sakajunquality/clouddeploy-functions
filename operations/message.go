@@ -1,12 +1,14 @@
 package operations
 
-type operationsAction string
-type resourceType string
+import "fmt"
+
+type OperationsAction string
+type ResourceType string
 
 type Operation struct {
-	Action             operationsAction
+	Action             OperationsAction
 	Resource           string
-	ResourceType       resourceType
+	ResourceType       ResourceType
 	Location           string
 	DeliveryPipelineId string
 	ProjectNumber      string
@@ -16,27 +18,27 @@ type Operation struct {
 }
 
 const (
-	operationsActionStart   operationsAction = "Start"
-	operationsActionSucceed operationsAction = "Succeed"
-	operationsActionFailure operationsAction = "Failure"
+	OperationsActionStart   OperationsAction = "Start"
+	OperationsActionSucceed OperationsAction = "Succeed"
+	OperationsActionFailure OperationsAction = "Failure"
 
-	resourceTypeDeliveryPipeline resourceType = "DeliveryPipeline"
-	resourceTypeDeliveryTarget   resourceType = "Target"
-	resourceTypeDeliveryRelease  resourceType = "Release"
-	resourceTypeDeliveryRollout  resourceType = "Rollout"
-	resourceTypeDeliveryJobRun   resourceType = "JobRun"
+	ResourceTypeDeliveryPipeline ResourceType = "DeliveryPipeline"
+	ResourceTypeTarget           ResourceType = "Target"
+	ResourceTypeRelease          ResourceType = "Release"
+	ResourceTypeRollout          ResourceType = "Rollout"
+	ResourceTypeJobRun           ResourceType = "JobRun"
 )
 
 func GetOperationByAttributes(attributes map[string]string) *Operation {
 	var ops Operation
 	if v, ok := attributes["Action"]; ok {
-		ops.Action = operationsAction(v)
+		ops.Action = OperationsAction(v)
 	}
 	if v, ok := attributes["Resource"]; ok {
 		ops.Resource = v
 	}
 	if v, ok := attributes["ResourceType"]; ok {
-		ops.ResourceType = resourceType(v)
+		ops.ResourceType = ResourceType(v)
 	}
 	if v, ok := attributes["Location"]; ok {
 		ops.Location = v
@@ -60,6 +62,25 @@ func GetOperationByAttributes(attributes map[string]string) *Operation {
 	return &ops
 }
 
+func (o *Operation) GetDeliveryPipelineURL() string {
+	base := o.getConsoleBaseURL()
+	return fmt.Sprintf("%s?project=%s", base, o.ProjectNumber)
+}
+
+func (o *Operation) GetReleaseURL() string {
+	base := o.getConsoleBaseURL()
+	return fmt.Sprintf("%sreleases/%s/rollouts?project=%s", base, o.ReleaseId, o.ProjectNumber)
+}
+
+func (o *Operation) GetTargetURL() string {
+	base := o.getConsoleBaseURL()
+	return fmt.Sprintf("%stargets/%s?project=%s", base, o.TargetId, o.ProjectNumber)
+}
+
+func (o *Operation) getConsoleBaseURL() string {
+	return fmt.Sprintf("https://console.cloud.google.com/deploy/delivery-pipelines/%s/%s/", o.Location, o.DeliveryPipelineId)
+}
+
 func (o *Operation) DispachAutoPromote() bool {
-	return o.TargetId != "" && o.Action == operationsActionSucceed && o.ResourceType == resourceTypeDeliveryRollout
+	return o.TargetId != "" && o.Action == OperationsActionSucceed && o.ResourceType == ResourceTypeRollout
 }
