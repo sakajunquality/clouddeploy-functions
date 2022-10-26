@@ -1,5 +1,10 @@
 package approvals
 
+import (
+	"errors"
+	"strings"
+)
+
 type ApprovalAction string
 
 type Approval struct {
@@ -43,4 +48,26 @@ func GetApprovalByAttributes(attributes map[string]string) *Approval {
 	}
 
 	return &approval
+}
+
+func (a *Approval) GetPipelineName() (*string, error) {
+	parts := strings.Split(a.Rollout, "/")
+	// projects/[project_id]/locations/[region]/deliveryPipelines/[pipeline name]/releases/[release name]/rollouts/[rollout name]
+	if len(parts) != 10 {
+		return nil, errors.New("failed to get pipeline name from rollout id")
+	}
+	return &parts[5], nil
+}
+
+func (a *ApprovalAction) GetPastParticiple() string {
+	switch *a {
+	case ApprovalActionRequired:
+		return "required"
+	case ApprovalActionApproved:
+		return "approved"
+	case ApprovalActionRejected:
+		return "rejected"
+	}
+
+	return ""
 }

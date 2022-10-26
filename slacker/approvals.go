@@ -15,7 +15,7 @@ func (s *Slacker) NotifyApproval(ctx context.Context, approval *approvals.Approv
 		s.channel,
 		slack.MsgOptionAttachments(slack.Attachment{
 			Color: getApprovalColor(string(approval.Action)),
-			Text:  fmt.Sprintf("Rollout is now %s for %s", approval.Action, approval.Rollout),
+			Text:  fmt.Sprintf("Approval is now %s for %s", approval.Action, approval.Rollout),
 		}),
 		slack.MsgOptionAsUser(true),
 	)
