@@ -68,3 +68,10 @@ func NotifySlackWithThread(ctx context.Context, m PubSubMessage) error {
 	}
 	return nil
 }
+
+func NotifySlackApprovalWithThread(ctx context.Context, m PubSubMessage) error {
+	approval := approvals.GetApprovalByAttributes(m.Attributes)
+	client := slacker.NewSlacker(os.Getenv("SLACK_TOKEN"), os.Getenv("SLACK_APPROVAL_CHANNEL"))
+	client.SetStateBucket(os.Getenv("SLACK_BOT_STATE_BUCKET"))
+	return client.NotifyApprovalThread(ctx, approval)
+}

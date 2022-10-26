@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sakajunquality/clouddeploy-functions/approvals"
 	"github.com/sakajunquality/clouddeploy-functions/clouddeploy"
 	"github.com/sakajunquality/clouddeploy-functions/operations"
 	"github.com/sakajunquality/clouddeploy-functions/slacker/state"
@@ -204,4 +205,28 @@ func (s *Slacker) getReleasePostTS(ctx context.Context, pipelineID, releaseID st
 
 func (s *Slacker) saveReleasePostTS(ctx context.Context, pipelineID, releaseID, ts string) error {
 	return state.NewReleaseStete(s.stateBucket, pipelineID, releaseID).SaveTS(ctx, ts)
+}
+
+func (s *Slacker) NotifyApprovalThread(ctx context.Context, approval *approvals.Approval) error {
+	pipelineName, err := approval.GetPipelineName()
+	if err != nil {
+		return err
+	}
+
+	ts, err := s.getReleasePostTS(ctx, *pipelineName, approval.ReleaseId)
+	if err != nil {
+		return err
+	}
+
+	api := slack.New(s.token)
+	_, _, err = api.PostMessage(
+		s.channel,
+		slack.MsgOptionAttachments(slack.Attachment{
+			Color: getApprovalColor(string(approval.Action)),
+			Text:  fmt.Sprintf("Approval is now %s for %s", approval.Action, approval.TargetId),
+		}),
+		slack.MsgOptionAsUser(true),
+		slack.MsgOptionTS(*ts),
+	)
+	return err
 }
