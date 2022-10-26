@@ -52,6 +52,11 @@ func (s *Slacker) createReleasePost(ctx context.Context, ops *operations.Operati
 		Value: ops.ProjectNumber,
 		Short: true,
 	})
+	fields = append(fields, slack.AttachmentField{
+		Title: "Link",
+		Value: fmt.Sprintf("<%s|Release> / <%s|Pipeline>", ops.GetReleaseURL(), ops.GetDeliveryPipelineURL()),
+		Short: false,
+	})
 
 	msg := slack.MsgOptionAttachments(
 		slack.Attachment{
@@ -107,7 +112,7 @@ func (s *Slacker) NotifyRolloutUpdate(ctx context.Context, ops *operations.Opera
 
 	fields = append(fields, slack.AttachmentField{
 		Title: "Stage",
-		Value: ops.TargetId,
+		Value: fmt.Sprintf("<%s|%s>", ops.GetTargetURL(), ops.TargetId),
 		Short: true,
 	})
 
@@ -116,7 +121,7 @@ func (s *Slacker) NotifyRolloutUpdate(ctx context.Context, ops *operations.Opera
 			Color:      color,
 			Title:      fmt.Sprintf("Rollout %s for %s ", ops.Action, ops.TargetId),
 			TitleLink:  ops.GetDeliveryPipelineURL(),
-			Text:       fmt.Sprintf("Rollout has been %s. Go to the Consoel for %s.", ops.Action, possibleAction),
+			Text:       fmt.Sprintf("Rollout has been %s. Go to the Cloud Console for %s.", ops.Action, possibleAction),
 			AuthorName: "Cloud Deploy",
 			Fields:     fields,
 		},
