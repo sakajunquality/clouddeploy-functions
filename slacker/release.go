@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sakajunquality/clouddeploy-functions/approvals"
 	"github.com/sakajunquality/clouddeploy-functions/clouddeploy"
-	"github.com/sakajunquality/clouddeploy-functions/operations"
+	"github.com/sakajunquality/clouddeploy-functions/pubsub/approvals"
+	"github.com/sakajunquality/clouddeploy-functions/pubsub/operations"
 	"github.com/sakajunquality/clouddeploy-functions/slacker/state"
 	"github.com/slack-go/slack"
 )
@@ -225,6 +225,7 @@ func (s *Slacker) NotifyApprovalThread(ctx context.Context, approval *approvals.
 		slack.MsgOptionAttachments(slack.Attachment{
 			Color:      getApprovalColor(string(approval.Action)),
 			Title:      fmt.Sprintf("[Approval] %s", approval.Action),
+			TitleLink:  approval.GetReleaseURL(),
 			Text:       fmt.Sprintf("Approval is now %s for %s", approval.Action.GetPastParticiple(), approval.TargetId),
 			AuthorName: "Cloud Deploy",
 		}),
