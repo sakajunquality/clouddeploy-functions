@@ -6,6 +6,8 @@ PoC Automation of Cloud Deploy w/ Cloud Functions
 
 Automatically promote rollout to next stage in a serialPipeline.
 
+![AutoPromote](docs/assets/auto_promote.png "AutoPromote")
+
 ### How to Deploy
 
 1. Prepare a new service account for this function.
@@ -33,6 +35,77 @@ gcloud functions deploy cloud-deploy-auto-promote \
 ### Limitations
 
 Currently allowing or disallowing pipelines is not yet implimented. If you need, adding approval is highly recommended. 
+
+## NotifySlackWithThread
+
+Post message to Slack channel when release is created.
+
+![release post](docs/assets/slack_thread_1.png "release post")
+
+Post rollout status to Slack thread of its release.
+
+![rollout thread](docs/assets/slack_thread_2.png "rollout thread")
+
+
+### Configurations
+
+#### Environment Variables
+
+- SLACK_TOKEN
+- SLACK_CHANNEL
+- SLACK_BOT_STATE_BUCKET
+
+#### Annotations
+Notification messages can be customized by adding annotations to release.
+
+| name               | usage                                   | value                         |
+|--------------------|-----------------------------------------|-------------------------------|
+| deployer-slack-id  | optional: mention in release post       | Slack UserID                  |
+| cc-slack-group-ids | optional: mention group in release post | Comma separated Slack GroupID |
+
+### How to Deploy
+
+TBD
+
+### Example Deploy
+
+TBD
+
+```bash
+gcloud functions deploy...
+```
+
+
+## NotifySlackApprovalWithThread
+
+Post approval status to Slack thread of its release.
+
+![AutoPromote](docs/assets/slack_thread_3.png "AutoPromote")
+
+### Configurations
+
+#### Environment Variables
+
+- SLACK_TOKEN
+- SLACK_CHANNEL
+- SLACK_BOT_STATE_BUCKET
+
+#### Annotations
+
+- TBD
+
+### How to Deploy
+
+TBD
+
+### Example Deploy
+
+TBD
+
+```bash
+gcloud functions deploy...
+```
+
 
 ## NotifyApprovalRequestSlackSimple
 
