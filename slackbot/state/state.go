@@ -3,7 +3,7 @@ package state
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 
 	"cloud.google.com/go/storage"
 	"github.com/rs/zerolog/log"
@@ -37,7 +37,7 @@ func (s *ReleaseState) GetTS(ctx context.Context) (*string, error) {
 	}
 	defer r.Close()
 
-	tsBtytes, err := ioutil.ReadAll(r)
+	tsBtytes, err := io.ReadAll(r)
 	if err != nil {
 		log.Error().Err(err)
 		return nil, err
