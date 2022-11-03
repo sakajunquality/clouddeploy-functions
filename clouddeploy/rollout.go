@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
+
 	deploy "cloud.google.com/go/deploy/apiv1"
 	deploypb "google.golang.org/genproto/googleapis/cloud/deploy/v1"
 )
@@ -36,12 +38,12 @@ func CreateRollout(ctx context.Context, client *deploy.CloudDeployClient, r *Rol
 	}
 	op, err := client.CreateRollout(ctx, promoteReq)
 	if err != nil {
-		fmt.Println(err)
+		log.Error().Err(err)
 		return nil
 	}
 
 	_, err = op.Wait(ctx)
-	fmt.Println(err)
+	log.Error().Err(err)
 	return err
 }
 
@@ -50,7 +52,7 @@ func GetNextStageTargetID(ctx context.Context, client *deploy.CloudDeployClient,
 		Name: pipelineID,
 	})
 	if err != nil {
-		fmt.Println(err)
+		log.Error().Err(err)
 		return nil, err
 	}
 
