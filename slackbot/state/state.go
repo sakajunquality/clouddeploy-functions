@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 
 	"cloud.google.com/go/storage"
+	"github.com/rs/zerolog/log"
 )
 
 type ReleaseState struct {
@@ -25,17 +26,20 @@ func NewReleaseStete(bucketName, pipelineID, ReleaseID string) *ReleaseState {
 func (s *ReleaseState) GetTS(ctx context.Context) (*string, error) {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
+		log.Error().Err(err)
 		return nil, err
 	}
 	obj := client.Bucket(s.bucketName).Object(s.statePath())
 	r, err := obj.NewReader(ctx)
 	if err != nil {
+		log.Error().Err(err)
 		return nil, err
 	}
 	defer r.Close()
 
 	tsBtytes, err := ioutil.ReadAll(r)
 	if err != nil {
+		log.Error().Err(err)
 		return nil, err
 	}
 
@@ -46,7 +50,8 @@ func (s *ReleaseState) GetTS(ctx context.Context) (*string, error) {
 func (s *ReleaseState) SaveTS(ctx context.Context, ts string) error {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		return nil
+		log.Error().Err(err)
+		return err
 	}
 
 	w := client.Bucket(s.bucketName).Object(s.statePath()).NewWriter(ctx)

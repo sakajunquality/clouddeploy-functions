@@ -1,4 +1,4 @@
-package slacker
+package slackbot
 
 import (
 	"context"
@@ -8,23 +8,27 @@ import (
 	"github.com/sakajunquality/clouddeploy-functions/clouddeploy"
 	"github.com/sakajunquality/clouddeploy-functions/pubsub/approvals"
 	"github.com/sakajunquality/clouddeploy-functions/pubsub/operations"
-	"github.com/sakajunquality/clouddeploy-functions/slacker/state"
+	"github.com/sakajunquality/clouddeploy-functions/slackbot/state"
 	"github.com/slack-go/slack"
+
+	"github.com/rs/zerolog/log"
 )
 
-func (s *Slacker) NotifyReleaseUpdate(ctx context.Context, ops *operations.Operation) error {
+func (s *Slackbot) NotifyReleaseUpdate(ctx context.Context, ops *operations.Operation) error {
 	switch ops.Action {
 	case operations.OperationsActionStart:
 		return s.createReleasePost(ctx, ops)
 	// TBD
 	case operations.OperationsActionFailure:
+		fallthrough
 	case operations.OperationsActionSucceed:
+		log.Info().Msg(fmt.Sprintf("%s is not supported, skipping", ops.Action))
 	}
 
 	return nil
 }
 
-func (s *Slacker) createReleasePost(ctx context.Context, ops *operations.Operation) error {
+func (s *Slackbot) createReleasePost(ctx context.Context, ops *operations.Operation) error {
 	release, err := clouddeploy.GetRelease(ctx, &clouddeploy.Rollout{
 		ProjectNumber: ops.ProjectNumber,
 		PipelineID:    ops.DeliveryPipelineId,
@@ -144,9 +148,10 @@ func (s *Slacker) createReleasePost(ctx context.Context, ops *operations.Operati
 	return s.saveReleasePostTS(ctx, ops.DeliveryPipelineId, ops.ReleaseId, ts)
 }
 
-func (s *Slacker) NotifyRolloutUpdate(ctx context.Context, ops *operations.Operation) error {
+func (s *Slackbot) NotifyRolloutUpdate(ctx context.Context, ops *operations.Operation) error {
 	ts, err := s.getReleasePostTS(ctx, ops.DeliveryPipelineId, ops.ReleaseId)
 	if err != nil {
+		log.Error().Err(err).Msg("failed to get release post ts")
 		return err
 	}
 
@@ -199,15 +204,15 @@ func (s *Slacker) NotifyRolloutUpdate(ctx context.Context, ops *operations.Opera
 	return err
 }
 
-func (s *Slacker) getReleasePostTS(ctx context.Context, pipelineID, releaseID string) (*string, error) {
+func (s *Slackbot) getReleasePostTS(ctx context.Context, pipelineID, releaseID string) (*string, error) {
 	return state.NewReleaseStete(s.stateBucket, pipelineID, releaseID).GetTS(ctx)
 }
 
-func (s *Slacker) saveReleasePostTS(ctx context.Context, pipelineID, releaseID, ts string) error {
+func (s *Slackbot) saveReleasePostTS(ctx context.Context, pipelineID, releaseID, ts string) error {
 	return state.NewReleaseStete(s.stateBucket, pipelineID, releaseID).SaveTS(ctx, ts)
 }
 
-func (s *Slacker) NotifyApprovalThread(ctx context.Context, approval *approvals.Approval) error {
+func (s *Slackbot) NotifyApprovalThread(ctx context.Context, approval *approvals.Approval) error {
 	pipelineName, err := approval.GetPipelineName()
 	if err != nil {
 		return err

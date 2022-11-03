@@ -1,4 +1,4 @@
-package slacker
+package slackbot
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/slack-go/slack"
 )
 
-func (s *Slacker) NotifyApproval(ctx context.Context, approval *approvals.Approval) error {
+func (s *Slackbot) NotifyApproval(ctx context.Context, approval *approvals.Approval) error {
 	api := slack.New(s.token)
 	_, _, err := api.PostMessage(
 		s.channel,

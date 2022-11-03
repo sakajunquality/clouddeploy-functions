@@ -6,18 +6,20 @@ import (
 	"time"
 
 	deploy "cloud.google.com/go/deploy/apiv1"
+	"github.com/rs/zerolog/log"
 )
 
 func AutoPromote(ctx context.Context, r *Rollout) error {
 	client, err := deploy.NewCloudDeployClient(ctx)
 	if err != nil {
-		fmt.Println(err)
+		log.Error().Err(err)
 		return err
 	}
 	defer client.Close()
 
 	nextTargetID, err := GetNextStageTargetID(ctx, client, r.GetPipelineResourceID(), r.TargetID)
 	if err != nil {
+		log.Error().Err(err)
 		return err
 	}
 
