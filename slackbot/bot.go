@@ -16,7 +16,3 @@ func NewSlackbot(token, channel string) *Slackbot {
 func (s *Slackbot) SetStateBucket(bucket string) {
 	s.stateBucket = bucket
 }
-
-func (*Slackbot) post(msg, ts string) (*string, error) {
-	return nil, nil
-}
