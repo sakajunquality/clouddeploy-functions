@@ -55,6 +55,7 @@ func NotifyApprovalRequestSlackSimple(ctx context.Context, m PubSubMessage) erro
 	return client.NotifyApproval(ctx, approval)
 }
 
+// NotifySlackWithThread is an entrypoint of Cloud Functions subscribing `clouddeploy-operations` topic.
 func NotifySlackWithThread(ctx context.Context, m PubSubMessage) error {
 	log.Debug().Msg("running NotifySlackWithThread")
 	client := slackbot.NewSlackbot(os.Getenv("SLACK_TOKEN"), os.Getenv("SLACK_CHANNEL"))
@@ -78,6 +79,7 @@ func NotifySlackWithThread(ctx context.Context, m PubSubMessage) error {
 	return nil
 }
 
+// NotifySlackApprovalWithThread is an entrypoint of Cloud Functions subscribing `clouddeploy-approvals`
 func NotifySlackApprovalWithThread(ctx context.Context, m PubSubMessage) error {
 	log.Debug().Msg("running NotifySlackApprovalWithThread")
 
