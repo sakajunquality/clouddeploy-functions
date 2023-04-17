@@ -27,11 +27,12 @@ func main() {
 	r.Use(middleware.Timeout(360 * time.Second))
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		log.Debug().Msg("healthy")
 		w.WriteHeader(http.StatusOK)
 	})
 
-	r.Post("/operations", controller.HandleOperationsTopic)
-	r.Post("/approvals", controller.HandleApprovalsTopic)
+	r.Post("/pubsub/push/operations", controller.HandleOperationsTopic)
+	r.Post("/pubsub/push/approvals", controller.HandleApprovalsTopic)
 
 	port := os.Getenv("PORT")
 	if port == "" {
