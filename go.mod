@@ -8,6 +8,7 @@ require (
 	cloud.google.com/go/storage v1.30.1
 	github.com/GoogleCloudPlatform/berglas v1.0.2
 	github.com/go-chi/chi/v5 v5.0.8
+	github.com/go-chi/httplog v0.3.0
 	github.com/rs/zerolog v1.29.1
 	github.com/slack-go/slack v0.12.2
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1

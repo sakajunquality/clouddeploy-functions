@@ -5,29 +5,28 @@ import (
 	"os"
 	"time"
 
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/sakajunquality/clouddeploy-functions/server/controller"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httplog"
 
 	_ "github.com/GoogleCloudPlatform/berglas/pkg/auto"
 )
 
-func init() {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-}
-
 func main() {
+	logger := httplog.NewLogger("clouddeploy-notification", httplog.Options{
+		JSON: true,
+	})
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
-	r.Use(middleware.Logger)
+	r.Use(httplog.RequestLogger(logger))
 	r.Use(middleware.Timeout(360 * time.Second))
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		log.Debug().Msg("healthy")
+		logger.Debug().Msg("healthy")
 		w.WriteHeader(http.StatusOK)
 	})
 
