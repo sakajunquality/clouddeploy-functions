@@ -1,34 +1,21 @@
-package controller
+package main
 
 import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"os"
 
 	"cloud.google.com/go/pubsub"
-	"github.com/rs/zerolog/log"
 
 	"github.com/sakajunquality/clouddeploy-functions/pubsub/approvals"
 	"github.com/sakajunquality/clouddeploy-functions/pubsub/operations"
-	"github.com/sakajunquality/clouddeploy-functions/slackbot"
 )
-
-var (
-	client *slackbot.Slackbot
-)
-
-func init() {
-	// @todo refactor
-	client = slackbot.NewSlackbot(os.Getenv("SLACK_TOKEN"), os.Getenv("SLACK_CHANNEL"))
-	client.SetStateBucket(os.Getenv("SLACK_BOT_STATE_BUCKET"))
-}
 
 func HandleOperationsTopic(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	m, err := readPubSubMessage(r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK) // ignoreing empty payload
 		return
 	}
 
@@ -36,30 +23,39 @@ func HandleOperationsTopic(w http.ResponseWriter, r *http.Request) {
 	switch ops.ResourceType {
 	case operations.ResourceTypeRelease:
 		if err := client.NotifyReleaseUpdate(ctx, ops); err != nil {
-			log.Error().Err(err).Msg("failed to NotifyReleaseUpdate")
+			logger.Error().Err(err).Msg("failed to NotifyReleaseUpdate")
 			return
 		}
 	case operations.ResourceTypeRollout:
 		if err := client.NotifyRolloutUpdate(ctx, ops); err != nil {
-			log.Error().Err(err).Msg("failed to NotifyReleaseUpdate")
+			logger.Error().Err(err).Msg("failed to NotifyReleaseUpdate")
 			return
 		}
 	default:
 		// not supported
-		log.Debug().Msg("unsupported resource type")
+		logger.Debug().Msg("unsupported resource type")
 	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func HandleApprovalsTopic(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	m, err := readPubSubMessage(r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusOK) // ignoreing empty payload
 		return
 	}
 
 	approval := approvals.GetApprovalByAttributes(m.Attributes)
-	client.NotifyApprovalThread(ctx, approval)
+	err = client.NotifyApprovalThread(ctx, approval)
+	if err != nil {
+		logger.Error().Err(err).Msg("failed to NotifyApprovalThread")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func readPubSubMessage(r *http.Request) (*pubsub.Message, error) {
